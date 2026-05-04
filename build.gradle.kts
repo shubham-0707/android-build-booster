@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.yourname"
-version = "0.4.0"
+version = "0.4.1"
 
 repositories {
     mavenCentral()
@@ -34,7 +34,6 @@ tasks {
 
     patchPluginXml {
         sinceBuild = "241"
-        untilBuild = "251.*"
         pluginDescription = """
             <p>Android Build Booster helps you find and fix Android build bottlenecks directly inside IntelliJ IDEA.</p>
             <ul>
