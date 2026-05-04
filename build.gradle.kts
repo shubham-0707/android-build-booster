@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.shubham0707"
-version = "0.4.4"
+version = "0.4.5"
 
 repositories {
     mavenCentral()
@@ -20,6 +20,16 @@ intellij {
     version = "2024.1"
     type = "IC"
     plugins = listOf()
+}
+
+// Suppress the "stdlib bundled automatically" info message from the IntelliJ Gradle plugin
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.jetbrains.kotlin" && requested.name == "kotlin-stdlib") {
+            useVersion("1.9.23")
+            because("Align with IntelliJ Platform bundled Kotlin version")
+        }
+    }
 }
 
 dependencies {

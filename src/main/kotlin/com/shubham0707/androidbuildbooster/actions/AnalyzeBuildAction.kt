@@ -2,7 +2,6 @@ package com.shubham0707.androidbuildbooster.actions
 
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindowManager
 import com.shubham0707.androidbuildbooster.toolwindow.BuildHealthPanel
 import javax.swing.JTabbedPane
@@ -16,17 +15,17 @@ import javax.swing.JTabbedPane
 class AnalyzeBuildAction : AnAction() {
 
     override fun actionPerformed(e: AnActionEvent) {
-        val project: Project = e.project ?: return
+        val project = e.project ?: return
         val toolWindowManager = ToolWindowManager.getInstance(project)
         val toolWindow = toolWindowManager.getToolWindow("Android Build Booster") ?: return
 
         // Make the tool window visible, then trigger analysis
         toolWindow.show {
-            triggerAnalysis(project, toolWindowManager)
+            triggerAnalysis(toolWindowManager)
         }
     }
 
-    private fun triggerAnalysis(project: Project, toolWindowManager: ToolWindowManager) {
+    private fun triggerAnalysis(toolWindowManager: ToolWindowManager) {
         val toolWindow = toolWindowManager.getToolWindow("Android Build Booster") ?: return
         val contentManager = toolWindow.contentManager
 
