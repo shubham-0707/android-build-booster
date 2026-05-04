@@ -1,0 +1,113 @@
+<idea-plugin>
+    <id>com.shubham0707.androidbuildbooster</id>
+    <name>Android Build Booster</name>
+    <version>0.4.0</version>
+    <vendor email="shubhamsinghlmp578@gmail.com">Shubham Singh</vendor>
+
+    <description><![CDATA[
+        <p>Android Build Booster analyzes your <code>gradle.properties</code> and
+        <code>build.gradle(.kts)</code> files for missing Android/Gradle optimizations.</p>
+        <ul>
+            <li>Detects missing performance-critical Gradle settings</li>
+            <li>Color-coded severity levels: CRITICAL, HIGH, MEDIUM, OK</li>
+            <li>One-click "Apply All Fixes" button patches <code>gradle.properties</code> automatically</li>
+            <li><b>Per-Module Build File Scanner</b>: detects kapt vs KSP, minSdk issues, redundant plugins, and more</li>
+            <li><b>Build Timeline</b>: visual horizontal bar chart of per-task durations with build comparison and task detail tips</li>
+            <li><b>Module Impact Analyzer</b>: shows which modules will be recompiled, with estimated rebuild times and stash suggestions</li>
+            <li>Available via <b>Tools → Android Build Booster → Analyze Build Health</b></li>
+        </ul>
+    ]]></description>
+
+    <change-notes><![CDATA[
+        <ul>
+            <li><b>0.4.0</b> — Bundled <code>abb</code> CLI tool; auto-installed to <code>~/.android-build-booster/abb</code> on first project open</li>
+            <li><b>0.3.0</b> — Per-module build.gradle scanner, build history comparison in Timeline, recompile time estimation + stash suggestions in Impact tab</li>
+            <li><b>0.2.0</b> — Build Timeline Dashboard + Module Impact Analyzer</li>
+            <li><b>0.1.0</b> — Initial release with Gradle health analyzer and auto-fix</li>
+        </ul>
+    ]]></change-notes>
+
+    <!-- IntelliJ platform dependency -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <!-- Required for ExternalSystemTaskNotificationListener (Gradle build events) -->
+    <depends>com.intellij.modules.externalSystem</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+
+        <!-- Notification group for abb CLI tip balloon -->
+        <notificationGroup
+            id="Android Build Booster"
+            displayType="BALLOON"
+            isLogByDefault="false"
+        />
+
+        <!-- Startup activity: extracts abb CLI script to ~/.android-build-booster/abb -->
+        <postStartupActivity
+            implementation="com.yourname.androidbuildbooster.startup.AbbStartupActivity"
+        />
+
+        <!-- Tool Window -->
+        <toolWindow
+            id="Android Build Booster"
+            anchor="bottom"
+            factoryClass="com.yourname.androidbuildbooster.toolwindow.BuildHealthToolWindowFactory"
+            secondary="false"
+        />
+
+        <!-- Project-level service: Gradle build-config analyser (existing) -->
+        <projectService
+            serviceImplementation="com.yourname.androidbuildbooster.services.GradleAnalyzerService"
+        />
+
+        <!-- Project-level service: Module dependency graph + VCS impact analyser -->
+        <projectService
+            serviceImplementation="com.yourname.androidbuildbooster.services.ModuleGraphService"
+        />
+
+        <!-- Project-level service: Per-module build.gradle(.kts) scanner -->
+        <projectService
+            serviceImplementation="com.yourname.androidbuildbooster.services.ModuleBuildFileAnalyzer"
+        />
+
+        <!-- Application-level service: stores per-task build metrics across builds -->
+        <applicationService
+            serviceImplementation="com.yourname.androidbuildbooster.services.BuildMetricsStore"
+        />
+
+        <!-- Gradle build listener: intercepts task output to record per-task durations -->
+        <externalSystemTaskNotificationListener
+            implementation="com.yourname.androidbuildbooster.services.BuildListenerService"
+        />
+
+    </extensions>
+
+    <actions>
+        <group
+            id="AndroidBuildBooster.ToolsMenu"
+            text="Android Build Booster"
+            description="Android Build Booster actions"
+            popup="true">
+
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+
+            <action
+                id="AndroidBuildBooster.AnalyzeBuildAction"
+                class="com.yourname.androidbuildbooster.actions.AnalyzeBuildAction"
+                text="Analyze Build Health"
+                description="Open the Android Build Booster tool window and analyze build configuration"
+                icon="AllIcons.Actions.Find"
+            />
+
+            <action
+                id="AndroidBuildBooster.ApplyFixesAction"
+                class="com.yourname.androidbuildbooster.actions.ApplyFixesAction"
+                text="Apply All Fixes"
+                description="Apply all detected build optimization fixes to gradle.properties"
+                icon="AllIcons.Actions.Lightning"
+            />
+
+        </group>
+    </actions>
+
+</idea-plugin>
