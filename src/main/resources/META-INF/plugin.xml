@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.shubham0707.androidbuildbooster</id>
     <name>Android Build Booster</name>
-    <version>0.4.3</version>
+    <version>0.4.4</version>
     <vendor email="shubhamsinghlmp578@gmail.com" url="https://github.com/shubham-0707/android-build-booster">Shubham Singh</vendor>
 
     <description><![CDATA[

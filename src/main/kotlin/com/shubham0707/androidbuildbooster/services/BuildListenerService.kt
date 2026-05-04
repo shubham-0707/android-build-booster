@@ -2,8 +2,7 @@ package com.shubham0707.androidbuildbooster.services
 
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId
-import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationEvent
-import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationListener
+import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationListenerAdapter
 import com.shubham0707.androidbuildbooster.model.TaskMetric
 import com.shubham0707.androidbuildbooster.model.TaskStatus
 import java.util.concurrent.ConcurrentHashMap
@@ -21,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap
  *   onFailure    → same as onEnd, but marks the last in-flight task as FAILED
  *   onCancel     → clean up without storing
  */
-class BuildListenerService : ExternalSystemTaskNotificationListener {
+class BuildListenerService : ExternalSystemTaskNotificationListenerAdapter() {
 
     private val log = thisLogger()
 
@@ -36,7 +35,7 @@ class BuildListenerService : ExternalSystemTaskNotificationListener {
         Regex("""^> Task (:[\\w:.\-]+)(?: (UP-TO-DATE|FROM-CACHE|SKIPPED|FAILED))?\s*$""")
 
     // -------------------------------------------------------------------------
-    // ExternalSystemTaskNotificationListener overrides
+    // ExternalSystemTaskNotificationListenerAdapter overrides
     // -------------------------------------------------------------------------
 
     override fun onStart(id: ExternalSystemTaskId, workingDir: String?) {
@@ -78,48 +77,23 @@ class BuildListenerService : ExternalSystemTaskNotificationListener {
         log.debug("BuildListenerService.onCancel id=$id — session discarded")
     }
 
-    override fun beforeCancel(id: ExternalSystemTaskId) {
-        // No-op
-    }
-
-    override fun onSuccess(id: ExternalSystemTaskId) {
-        // No-op — we handle completion in onEnd
-    }
-
-    override fun onStatusChange(event: ExternalSystemTaskNotificationEvent) {
-        // No-op — we derive state from raw output parsing
-    }
-
     // -------------------------------------------------------------------------
     // Private helpers
     // -------------------------------------------------------------------------
 
-    /**
-     * Checks whether [line] is a Gradle task declaration line.
-     * If so, finalises the previously in-flight task and starts timing the new one.
-     */
     private fun processLine(session: BuildSession, line: String) {
         val match = taskLineRegex.matchEntire(line) ?: return
 
         val newPath = match.groupValues[1]
         val statusStr = match.groupValues[2].takeIf { it.isNotEmpty() }
 
-        // Finalise whatever was running before
         finaliseCurrentTask(session, forcedStatus = null)
 
-        // Start the new task
         session.currentPath = newPath
         session.currentStatus = parseTaskStatus(statusStr)
         session.currentStart = System.currentTimeMillis()
     }
 
-    /**
-     * If there is a current in-flight task, computes its duration, builds a [TaskMetric],
-     * appends it to [session].tasks, and resets the in-flight state.
-     *
-     * @param forcedStatus if non-null, overrides the status stored in the session
-     *                     (used to mark the last task as FAILED on build failure).
-     */
     private fun finaliseCurrentTask(session: BuildSession, forcedStatus: TaskStatus?) {
         val path = session.currentPath ?: return
         val durationMs = System.currentTimeMillis() - session.currentStart
@@ -135,16 +109,11 @@ class BuildListenerService : ExternalSystemTaskNotificationListener {
             buildTimestamp = session.startTime
         )
 
-        // Reset in-flight state
         session.currentPath = null
         session.currentStatus = TaskStatus.UNKNOWN
         session.currentStart = System.currentTimeMillis()
     }
 
-    /**
-     * Maps a Gradle status string to our [TaskStatus] enum.
-     * A null statusStr means the task ran normally and succeeded.
-     */
     private fun parseTaskStatus(statusStr: String?): TaskStatus = when (statusStr) {
         "UP-TO-DATE" -> TaskStatus.UP_TO_DATE
         "FROM-CACHE" -> TaskStatus.FROM_CACHE
@@ -154,20 +123,9 @@ class BuildListenerService : ExternalSystemTaskNotificationListener {
         else         -> TaskStatus.UNKNOWN
     }
 
-    /**
-     * Splits a full Gradle task path into (module, taskName).
-     *
-     * Examples:
-     *   ":app:compileDebugKotlin"   → (":app",  "compileDebugKotlin")
-     *   ":core:network:processResources" → (":core:network", "processResources")
-     *   ":compileJava"              → (":",      "compileJava")
-     */
     private fun parseModuleFromPath(path: String): Pair<String, String> {
-        // path always starts with ':'
-        // The task name is the last segment; everything before it is the module
         val lastColon = path.lastIndexOf(':')
         return if (lastColon <= 0) {
-            // e.g. ":compileJava" — root-level task
             Pair(":", path.trimStart(':'))
         } else {
             val module = path.substring(0, lastColon)
