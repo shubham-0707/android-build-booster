@@ -1,4 +1,4 @@
-package com.yourname.androidbuildbooster.model
+package com.shubham0707.androidbuildbooster.model
 
 data class TaskMetric(
     val path: String,         // e.g. :app:compileDebugKotlin

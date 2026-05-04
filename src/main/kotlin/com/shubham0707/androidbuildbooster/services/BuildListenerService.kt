@@ -1,11 +1,11 @@
-package com.yourname.androidbuildbooster.services
+package com.shubham0707.androidbuildbooster.services
 
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationEvent
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationListener
-import com.yourname.androidbuildbooster.model.TaskMetric
-import com.yourname.androidbuildbooster.model.TaskStatus
+import com.shubham0707.androidbuildbooster.model.TaskMetric
+import com.shubham0707.androidbuildbooster.model.TaskStatus
 import java.util.concurrent.ConcurrentHashMap
 
 /**

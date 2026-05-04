@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.shubham0707.androidbuildbooster</id>
     <name>Android Build Booster</name>
-    <version>0.4.2</version>
+    <version>0.4.3</version>
     <vendor email="shubhamsinghlmp578@gmail.com" url="https://github.com/shubham-0707/android-build-booster">Shubham Singh</vendor>
 
     <description><![CDATA[
@@ -44,40 +44,40 @@
 
         <!-- Startup activity: extracts abb CLI script to ~/.android-build-booster/abb -->
         <postStartupActivity
-            implementation="com.yourname.androidbuildbooster.startup.AbbStartupActivity"
+            implementation="com.shubham0707.androidbuildbooster.startup.AbbStartupActivity"
         />
 
         <!-- Tool Window -->
         <toolWindow
             id="Android Build Booster"
             anchor="bottom"
-            factoryClass="com.yourname.androidbuildbooster.toolwindow.BuildHealthToolWindowFactory"
+            factoryClass="com.shubham0707.androidbuildbooster.toolwindow.BuildHealthToolWindowFactory"
             secondary="false"
         />
 
         <!-- Project-level service: Gradle build-config analyser (existing) -->
         <projectService
-            serviceImplementation="com.yourname.androidbuildbooster.services.GradleAnalyzerService"
+            serviceImplementation="com.shubham0707.androidbuildbooster.services.GradleAnalyzerService"
         />
 
         <!-- Project-level service: Module dependency graph + VCS impact analyser -->
         <projectService
-            serviceImplementation="com.yourname.androidbuildbooster.services.ModuleGraphService"
+            serviceImplementation="com.shubham0707.androidbuildbooster.services.ModuleGraphService"
         />
 
         <!-- Project-level service: Per-module build.gradle(.kts) scanner -->
         <projectService
-            serviceImplementation="com.yourname.androidbuildbooster.services.ModuleBuildFileAnalyzer"
+            serviceImplementation="com.shubham0707.androidbuildbooster.services.ModuleBuildFileAnalyzer"
         />
 
         <!-- Application-level service: stores per-task build metrics across builds -->
         <applicationService
-            serviceImplementation="com.yourname.androidbuildbooster.services.BuildMetricsStore"
+            serviceImplementation="com.shubham0707.androidbuildbooster.services.BuildMetricsStore"
         />
 
         <!-- Gradle build listener: intercepts task output to record per-task durations -->
         <externalSystemTaskNotificationListener
-            implementation="com.yourname.androidbuildbooster.services.BuildListenerService"
+            implementation="com.shubham0707.androidbuildbooster.services.BuildListenerService"
         />
 
     </extensions>
@@ -93,7 +93,7 @@
 
             <action
                 id="AndroidBuildBooster.AnalyzeBuildAction"
-                class="com.yourname.androidbuildbooster.actions.AnalyzeBuildAction"
+                class="com.shubham0707.androidbuildbooster.actions.AnalyzeBuildAction"
                 text="Analyze Build Health"
                 description="Open the Android Build Booster tool window and analyze build configuration"
                 icon="AllIcons.Actions.Find"
@@ -101,7 +101,7 @@
 
             <action
                 id="AndroidBuildBooster.ApplyFixesAction"
-                class="com.yourname.androidbuildbooster.actions.ApplyFixesAction"
+                class="com.shubham0707.androidbuildbooster.actions.ApplyFixesAction"
                 text="Apply All Fixes"
                 description="Apply all detected build optimization fixes to gradle.properties"
                 icon="AllIcons.Actions.Lightning"

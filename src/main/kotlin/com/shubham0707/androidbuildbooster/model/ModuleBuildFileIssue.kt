@@ -1,4 +1,4 @@
-package com.yourname.androidbuildbooster.model
+package com.shubham0707.androidbuildbooster.model
 
 /**
  * Represents a build-configuration issue found in a specific module's build.gradle(.kts) file.

@@ -1,10 +1,10 @@
-package com.yourname.androidbuildbooster.toolwindow
+package com.shubham0707.androidbuildbooster.toolwindow
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
-import com.yourname.androidbuildbooster.model.TaskMetric
-import com.yourname.androidbuildbooster.model.TaskStatus
-import com.yourname.androidbuildbooster.services.BuildMetricsStore
+import com.shubham0707.androidbuildbooster.model.TaskMetric
+import com.shubham0707.androidbuildbooster.model.TaskStatus
+import com.shubham0707.androidbuildbooster.services.BuildMetricsStore
 import java.awt.AlphaComposite
 import java.awt.BasicStroke
 import java.awt.BorderLayout

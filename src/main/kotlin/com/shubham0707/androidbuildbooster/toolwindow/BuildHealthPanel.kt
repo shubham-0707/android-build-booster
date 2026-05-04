@@ -1,4 +1,4 @@
-package com.yourname.androidbuildbooster.toolwindow
+package com.shubham0707.androidbuildbooster.toolwindow
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
@@ -6,11 +6,11 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
-import com.yourname.androidbuildbooster.model.BuildIssue
-import com.yourname.androidbuildbooster.model.ModuleBuildFileIssue
-import com.yourname.androidbuildbooster.model.Severity
-import com.yourname.androidbuildbooster.services.GradleAnalyzerService
-import com.yourname.androidbuildbooster.services.ModuleBuildFileAnalyzer
+import com.shubham0707.androidbuildbooster.model.BuildIssue
+import com.shubham0707.androidbuildbooster.model.ModuleBuildFileIssue
+import com.shubham0707.androidbuildbooster.model.Severity
+import com.shubham0707.androidbuildbooster.services.GradleAnalyzerService
+import com.shubham0707.androidbuildbooster.services.ModuleBuildFileAnalyzer
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Component

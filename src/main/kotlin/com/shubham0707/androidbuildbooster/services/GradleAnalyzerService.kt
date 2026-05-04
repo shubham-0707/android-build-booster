@@ -1,10 +1,10 @@
-package com.yourname.androidbuildbooster.services
+package com.shubham0707.androidbuildbooster.services
 
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.project.Project
-import com.yourname.androidbuildbooster.model.BuildIssue
-import com.yourname.androidbuildbooster.model.Severity
+import com.shubham0707.androidbuildbooster.model.BuildIssue
+import com.shubham0707.androidbuildbooster.model.Severity
 import java.io.File
 import java.util.Properties
 

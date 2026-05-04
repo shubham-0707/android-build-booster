@@ -1,10 +1,10 @@
-package com.yourname.androidbuildbooster.actions
+package com.shubham0707.androidbuildbooster.actions
 
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindowManager
-import com.yourname.androidbuildbooster.toolwindow.BuildHealthPanel
+import com.shubham0707.androidbuildbooster.toolwindow.BuildHealthPanel
 import javax.swing.JTabbedPane
 
 /**

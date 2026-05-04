@@ -1,8 +1,8 @@
-package com.yourname.androidbuildbooster.services
+package com.shubham0707.androidbuildbooster.services
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
-import com.yourname.androidbuildbooster.model.TaskMetric
+import com.shubham0707.androidbuildbooster.model.TaskMetric
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.concurrent.ConcurrentHashMap

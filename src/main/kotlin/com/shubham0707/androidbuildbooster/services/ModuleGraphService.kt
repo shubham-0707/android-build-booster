@@ -1,11 +1,11 @@
-package com.yourname.androidbuildbooster.services
+package com.shubham0707.androidbuildbooster.services
 
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vcs.changes.ChangeListManager
-import com.yourname.androidbuildbooster.model.ModuleNode
+import com.shubham0707.androidbuildbooster.model.ModuleNode
 import java.io.File
 import java.util.LinkedList
 

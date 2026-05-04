@@ -1,4 +1,4 @@
-package com.yourname.androidbuildbooster.toolwindow
+package com.shubham0707.androidbuildbooster.toolwindow
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
@@ -6,9 +6,9 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
-import com.yourname.androidbuildbooster.model.ModuleNode
-import com.yourname.androidbuildbooster.services.BuildMetricsStore
-import com.yourname.androidbuildbooster.services.ModuleGraphService
+import com.shubham0707.androidbuildbooster.model.ModuleNode
+import com.shubham0707.androidbuildbooster.services.BuildMetricsStore
+import com.shubham0707.androidbuildbooster.services.ModuleGraphService
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Component
@@ -187,7 +187,7 @@ class ModuleImpactPanel(private val project: Project) : JPanel(BorderLayout()) {
      */
     private fun computeEstimatedTimes(
         nodes: List<ModuleNode>,
-        lastBuild: List<com.yourname.androidbuildbooster.model.TaskMetric>
+        lastBuild: List<com.shubham0707.androidbuildbooster.model.TaskMetric>
     ): Map<String, Long> {
         val result = mutableMapOf<String, Long>()
         for (node in nodes.filter { it.isAffected }) {
@@ -374,7 +374,7 @@ class ModuleImpactPanel(private val project: Project) : JPanel(BorderLayout()) {
             allNodes: List<ModuleNode>,
             estimatedTimes: Map<String, Long>,
             @Suppress("UNUSED_PARAMETER")
-            lastBuild: List<com.yourname.androidbuildbooster.model.TaskMetric>
+            lastBuild: List<com.shubham0707.androidbuildbooster.model.TaskMetric>
         ) {
             listModel.clear()
 

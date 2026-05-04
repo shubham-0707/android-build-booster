@@ -1,4 +1,4 @@
-package com.yourname.androidbuildbooster.model
+package com.shubham0707.androidbuildbooster.model
 
 data class ModuleNode(
     val name: String,                                    // :app

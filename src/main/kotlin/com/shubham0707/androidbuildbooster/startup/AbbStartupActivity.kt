@@ -1,4 +1,4 @@
-package com.yourname.androidbuildbooster.startup
+package com.shubham0707.androidbuildbooster.startup
 
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
