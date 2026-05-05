@@ -2,25 +2,23 @@ package com.shubham0707.androidbuildbooster.services
 
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId
-import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationListenerAdapter
+import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationEvent
+import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationListener
+import com.intellij.openapi.project.Project
 import com.shubham0707.androidbuildbooster.model.TaskMetric
 import com.shubham0707.androidbuildbooster.model.TaskStatus
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Listens to every Gradle (external system) build and records per-task durations
- * by parsing the raw text output lines that Gradle streams during execution.
+ * Listens to every Gradle build and records per-task durations by parsing the
+ * raw text output lines that Gradle streams during execution.
  *
- * Registered in plugin.xml as an <externalSystemTaskNotificationListener> extension.
+ * Implements [ExternalSystemTaskNotificationListener] directly (no deprecated adapter)
+ * and registers itself via the EP_NAME extension point on project open.
  *
- * Lifecycle per build:
- *   onStart      → create a BuildSession keyed by ExternalSystemTaskId
- *   onTaskOutput → parse "⟩ Task :path:name [STATUS]" lines to time each task
- *   onEnd        → finalise last task, push results into BuildMetricsStore, clean up
- *   onFailure    → same as onEnd, but marks the last in-flight task as FAILED
- *   onCancel     → clean up without storing
+ * Subscribed in [BuildListenerStartupActivity] on project open.
  */
-class BuildListenerService : ExternalSystemTaskNotificationListenerAdapter() {
+class BuildListenerService(private val project: Project) : ExternalSystemTaskNotificationListener {
 
     private val log = thisLogger()
 
@@ -30,28 +28,70 @@ class BuildListenerService : ExternalSystemTaskNotificationListenerAdapter() {
     // Regex to detect Gradle task lines:
     //   "> Task :app:compileDebugKotlin"
     //   "> Task :app:compileDebugKotlin UP-TO-DATE"
-    //   "> Task :compileJava SKIPPED"
     private val taskLineRegex =
         Regex("""^> Task (:[\\w:.\-]+)(?: (UP-TO-DATE|FROM-CACHE|SKIPPED|FAILED))?\s*$""")
 
     // -------------------------------------------------------------------------
-    // ExternalSystemTaskNotificationListenerAdapter overrides
+    // Registration (called once per project from BuildListenerStartupActivity)
     // -------------------------------------------------------------------------
 
-    override fun onStart(id: ExternalSystemTaskId, workingDir: String?) {
-        log.debug("BuildListenerService.onStart id=$id workingDir=$workingDir")
-        sessions[id] = BuildSession(workingDir = workingDir ?: "")
+    fun register() {
+        ExternalSystemTaskNotificationListener.EP_NAME.addExtensionPointListener(
+            object : com.intellij.openapi.extensions.ExtensionPointListener<ExternalSystemTaskNotificationListener> {
+                override fun extensionAdded(
+                    extension: ExternalSystemTaskNotificationListener,
+                    pluginDescriptor: com.intellij.openapi.extensions.PluginDescriptor
+                ) { /* no-op */ }
+                override fun extensionRemoved(
+                    extension: ExternalSystemTaskNotificationListener,
+                    pluginDescriptor: com.intellij.openapi.extensions.PluginDescriptor
+                ) { /* no-op */ }
+            },
+            project
+        )
+        // Register this instance directly as a listener for this project's lifetime
+        ExternalSystemTaskNotificationListener.EP_NAME.point.registerExtension(this, project)
+        log.info("BuildListenerService: registered for project '${project.name}'")
     }
 
+    // -------------------------------------------------------------------------
+    // ExternalSystemTaskNotificationListener implementation
+    // -------------------------------------------------------------------------
+
     override fun onTaskOutput(id: ExternalSystemTaskId, text: String, stdOut: Boolean) {
-        val session = sessions[id] ?: return
-        // Gradle may batch multiple lines in one callback — split and process each
-        text.lines().forEach { line ->
-            processLine(session, line.trim())
+        val session = sessions.getOrPut(id) {
+            BuildSession(workingDir = project.basePath ?: "")
         }
+        text.lines().forEach { line -> processLine(session, line.trim()) }
     }
 
     override fun onEnd(id: ExternalSystemTaskId) {
+        finaliseAndStore(id)
+    }
+
+    override fun onSuccess(id: ExternalSystemTaskId) {
+        // finalised by onEnd
+    }
+
+    override fun onFailure(id: ExternalSystemTaskId, e: Exception) {
+        val session = sessions.get(id) ?: return
+        finaliseCurrentTask(session, forcedStatus = TaskStatus.FAILED)
+    }
+
+    override fun onCancel(id: ExternalSystemTaskId) {
+        // Discard cancelled builds
+        sessions.remove(id)
+    }
+
+    override fun beforeCancel(id: ExternalSystemTaskId) { /* no-op */ }
+
+    override fun onStatusChange(event: ExternalSystemTaskNotificationEvent) { /* no-op */ }
+
+    // -------------------------------------------------------------------------
+    // Private helpers
+    // -------------------------------------------------------------------------
+
+    private fun finaliseAndStore(id: ExternalSystemTaskId) {
         val session = sessions.remove(id) ?: return
         finaliseCurrentTask(session, forcedStatus = null)
         val projectPath = session.workingDir
@@ -61,29 +101,8 @@ class BuildListenerService : ExternalSystemTaskNotificationListenerAdapter() {
         }
     }
 
-    override fun onFailure(id: ExternalSystemTaskId, e: Exception) {
-        val session = sessions.remove(id) ?: return
-        finaliseCurrentTask(session, forcedStatus = TaskStatus.FAILED)
-        val projectPath = session.workingDir
-        if (session.tasks.isNotEmpty()) {
-            log.info("BuildListenerService: storing ${session.tasks.size} tasks (build failed) for $projectPath")
-            BuildMetricsStore.getInstance().storeBuild(projectPath, session.tasks.toList())
-        }
-    }
-
-    override fun onCancel(id: ExternalSystemTaskId) {
-        // Discard the session without storing — partial data is misleading
-        sessions.remove(id)
-        log.debug("BuildListenerService.onCancel id=$id — session discarded")
-    }
-
-    // -------------------------------------------------------------------------
-    // Private helpers
-    // -------------------------------------------------------------------------
-
     private fun processLine(session: BuildSession, line: String) {
         val match = taskLineRegex.matchEntire(line) ?: return
-
         val newPath = match.groupValues[1]
         val statusStr = match.groupValues[2].takeIf { it.isNotEmpty() }
 
@@ -128,9 +147,7 @@ class BuildListenerService : ExternalSystemTaskNotificationListenerAdapter() {
         return if (lastColon <= 0) {
             Pair(":", path.trimStart(':'))
         } else {
-            val module = path.substring(0, lastColon)
-            val taskName = path.substring(lastColon + 1)
-            Pair(module, taskName)
+            Pair(path.substring(0, lastColon), path.substring(lastColon + 1))
         }
     }
 

@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.shubham0707.androidbuildbooster</id>
     <name>Android Build Booster</name>
-    <version>0.4.5</version>
+    <version>0.4.6</version>
     <vendor email="shubhamsinghlmp578@gmail.com" url="https://github.com/shubham-0707/android-build-booster">Shubham Singh</vendor>
 
     <description><![CDATA[
@@ -20,6 +20,7 @@
 
     <change-notes><![CDATA[
         <ul>
+            <li><b>0.4.6</b> — Eliminated all deprecated API usage; build listener now uses EP_NAME direct registration</li>
             <li><b>0.4.0</b> — Bundled <code>abb</code> CLI tool; auto-installed to <code>~/.android-build-booster/abb</code> on first project open</li>
             <li><b>0.3.0</b> — Per-module build.gradle scanner, build history comparison in Timeline, recompile time estimation + stash suggestions in Impact tab</li>
             <li><b>0.2.0</b> — Build Timeline Dashboard + Module Impact Analyzer</li>
@@ -30,8 +31,8 @@
     <!-- IntelliJ platform dependency -->
     <depends>com.intellij.modules.platform</depends>
 
-    <!-- Required for ExternalSystemTaskNotificationListener (Gradle build events) -->
-    <depends>com.intellij.modules.externalSystem</depends>
+    <!-- Required for GradleImportingUtil (modern build event API) -->
+    <depends>org.jetbrains.plugins.gradle</depends>
 
     <extensions defaultExtensionNs="com.intellij">
 
@@ -40,6 +41,11 @@
             id="Android Build Booster"
             displayType="BALLOON"
             isLogByDefault="false"
+        />
+
+        <!-- Startup activity: registers modern Gradle build listener via GradleImportingUtil -->
+        <postStartupActivity
+            implementation="com.shubham0707.androidbuildbooster.startup.BuildListenerStartupActivity"
         />
 
         <!-- Startup activity: extracts abb CLI script to ~/.android-build-booster/abb -->
@@ -73,11 +79,6 @@
         <!-- Application-level service: stores per-task build metrics across builds -->
         <applicationService
             serviceImplementation="com.shubham0707.androidbuildbooster.services.BuildMetricsStore"
-        />
-
-        <!-- Gradle build listener: intercepts task output to record per-task durations -->
-        <externalSystemTaskNotificationListener
-            implementation="com.shubham0707.androidbuildbooster.services.BuildListenerService"
         />
 
     </extensions>

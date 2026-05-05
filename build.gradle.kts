@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.shubham0707"
-version = "0.4.5"
+version = "0.4.6"
 
 repositories {
     mavenCentral()
@@ -19,7 +19,7 @@ intellij {
     pluginName = "android-build-booster"
     version = "2024.1"
     type = "IC"
-    plugins = listOf()
+    plugins = listOf("org.jetbrains.plugins.gradle")
 }
 
 // Suppress the "stdlib bundled automatically" info message from the IntelliJ Gradle plugin
@@ -30,11 +30,6 @@ configurations.all {
             because("Align with IntelliJ Platform bundled Kotlin version")
         }
     }
-}
-
-dependencies {
-    // kotlin-stdlib is provided by the IntelliJ Platform — do not add it explicitly
-    // to avoid version conflicts (see https://jb.gg/intellij-platform-kotlin-stdlib)
 }
 
 tasks {
@@ -56,6 +51,7 @@ tasks {
         """.trimIndent()
         changeNotes = """
             <ul>
+                <li><b>0.4.6</b> — Eliminated all deprecated API usage; build listener now uses EP_NAME direct registration</li>
                 <li><b>0.4.0</b> — Bundled abb CLI tool; auto-installs to ~/.android-build-booster/abb on first project open</li>
                 <li><b>0.3.0</b> — Per-module build.gradle scanner; build history comparison in Timeline; recompile time estimation + stash suggestions in Impact tab</li>
                 <li><b>0.2.0</b> — Build Timeline Dashboard + Module Impact Analyzer</li>
@@ -85,7 +81,7 @@ tasks {
     }
 
     buildPlugin {
-        // Produces build/distributions/android-build-booster-0.3.0.zip
+        // Produces build/distributions/android-build-booster-0.4.5.zip
     }
 
     compileKotlin {
