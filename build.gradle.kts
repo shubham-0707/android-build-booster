@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.shubham0707"
-version = "0.4.7"
+version = "0.4.8"
 
 repositories {
     mavenCentral()
@@ -51,7 +51,9 @@ tasks {
         """.trimIndent()
         changeNotes = """
             <ul>
-                <li><b>0.4.7</b> — Eliminated all deprecated API usage; build listener now uses EP_NAME direct registration</li>
+                <li><b>0.4.8</b> — Suppress deprecated-override warnings; use ExternalSystemProgressNotificationManager for scoped registration</li>
+                <li><b>0.4.7</b> — Signed build published to JetBrains Marketplace</li>
+                <li><b>0.4.6</b> — Eliminated ExternalSystemTaskNotificationListenerAdapter (scheduled for removal)</li>
                 <li><b>0.4.0</b> — Bundled abb CLI tool; auto-installs to ~/.android-build-booster/abb on first project open</li>
                 <li><b>0.3.0</b> — Per-module build.gradle scanner; build history comparison in Timeline; recompile time estimation + stash suggestions in Impact tab</li>
                 <li><b>0.2.0</b> — Build Timeline Dashboard + Module Impact Analyzer</li>
@@ -76,12 +78,11 @@ tasks {
     }
 
     runIde {
-        // JVM args for the sandbox IDE
         jvmArgs("-Xmx2g")
     }
 
     buildPlugin {
-        // Produces build/distributions/android-build-booster-0.4.5.zip
+        // Produces build/distributions/android-build-booster-0.4.8.zip
     }
 
     compileKotlin {

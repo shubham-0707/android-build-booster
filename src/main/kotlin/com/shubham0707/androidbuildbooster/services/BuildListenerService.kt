@@ -13,8 +13,14 @@ import java.util.concurrent.ConcurrentHashMap
  * Listens to every Gradle build and records per-task durations by parsing the
  * raw text output lines that Gradle streams during execution.
  *
- * Implements [ExternalSystemTaskNotificationListener] directly (no deprecated adapter)
- * and registers itself via the EP_NAME extension point on project open.
+ * Registered via [ExternalSystemProgressNotificationManager] so it works as a
+ * project-scoped listener tied to the project's [Disposable] lifetime.
+ *
+ * [onTaskOutput], [onEnd], [onSuccess], [onFailure] and [onCancel] are the
+ * only meaningful callbacks — the remaining interface methods are no-ops.
+ * Deprecation warnings on the overrides are suppressed because the
+ * interface itself is the only stable public hook available across all
+ * IntelliJ Platform versions (2024.1 – 2026.1+).
  *
  * Subscribed in [BuildListenerStartupActivity] on project open.
  */
@@ -36,51 +42,45 @@ class BuildListenerService(private val project: Project) : ExternalSystemTaskNot
     // -------------------------------------------------------------------------
 
     fun register() {
-        ExternalSystemTaskNotificationListener.EP_NAME.addExtensionPointListener(
-            object : com.intellij.openapi.extensions.ExtensionPointListener<ExternalSystemTaskNotificationListener> {
-                override fun extensionAdded(
-                    extension: ExternalSystemTaskNotificationListener,
-                    pluginDescriptor: com.intellij.openapi.extensions.PluginDescriptor
-                ) { /* no-op */ }
-                override fun extensionRemoved(
-                    extension: ExternalSystemTaskNotificationListener,
-                    pluginDescriptor: com.intellij.openapi.extensions.PluginDescriptor
-                ) { /* no-op */ }
-            },
-            project
-        )
-        // Register this instance directly as a listener for this project's lifetime
-        ExternalSystemTaskNotificationListener.EP_NAME.point.registerExtension(this, project)
+        val notificationManager =
+            com.intellij.openapi.externalSystem.service.notification
+                .ExternalSystemProgressNotificationManager.getInstance()
+        notificationManager.addNotificationListener(this, project)
         log.info("BuildListenerService: registered for project '${project.name}'")
     }
 
     // -------------------------------------------------------------------------
-    // ExternalSystemTaskNotificationListener implementation
+    // ExternalSystemTaskNotificationListener — suppress deprecation warnings
+    // on the override declarations; the interface itself is the only stable
+    // cross-version hook and the methods still function correctly at runtime.
     // -------------------------------------------------------------------------
 
+    @Suppress("OVERRIDE_DEPRECATION")
     override fun onTaskOutput(id: ExternalSystemTaskId, text: String, stdOut: Boolean) {
         val session = sessions.getOrPut(id) {
             BuildSession(workingDir = project.basePath ?: "")
         }
-        text.lines().forEach { line -> processLine(session, line.trim()) }
+        text.lines().forEach { line: String -> processLine(session, line.trim()) }
     }
 
+    @Suppress("OVERRIDE_DEPRECATION")
     override fun onEnd(id: ExternalSystemTaskId) {
         finaliseAndStore(id)
     }
 
+    @Suppress("OVERRIDE_DEPRECATION")
     override fun onSuccess(id: ExternalSystemTaskId) {
         // finalised by onEnd
     }
 
+    @Suppress("OVERRIDE_DEPRECATION")
     override fun onFailure(id: ExternalSystemTaskId, e: Exception) {
-        val session = sessions.get(id) ?: return
-        finaliseCurrentTask(session, forcedStatus = TaskStatus.FAILED)
+        sessions[id]?.let { finaliseCurrentTask(it, forcedStatus = TaskStatus.FAILED) }
     }
 
+    @Suppress("OVERRIDE_DEPRECATION")
     override fun onCancel(id: ExternalSystemTaskId) {
-        // Discard cancelled builds
-        sessions.remove(id)
+        sessions.remove(id) // discard cancelled builds
     }
 
     override fun beforeCancel(id: ExternalSystemTaskId) { /* no-op */ }
@@ -94,10 +94,9 @@ class BuildListenerService(private val project: Project) : ExternalSystemTaskNot
     private fun finaliseAndStore(id: ExternalSystemTaskId) {
         val session = sessions.remove(id) ?: return
         finaliseCurrentTask(session, forcedStatus = null)
-        val projectPath = session.workingDir
         if (session.tasks.isNotEmpty()) {
-            log.info("BuildListenerService: storing ${session.tasks.size} tasks for $projectPath")
-            BuildMetricsStore.getInstance().storeBuild(projectPath, session.tasks.toList())
+            log.info("BuildListenerService: storing ${session.tasks.size} tasks for ${session.workingDir}")
+            BuildMetricsStore.getInstance().storeBuild(session.workingDir, session.tasks.toList())
         }
     }
 
